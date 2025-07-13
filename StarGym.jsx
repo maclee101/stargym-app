@@ -8,22 +8,27 @@ import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken }
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, addDoc } from 'firebase/firestore';
 
 // --- Firebase Configuration ---
-// This configuration now intelligently switches between the preview environment and a real deployment.
-const firebaseConfig = typeof __firebase_config !== 'undefined' 
-    ? JSON.parse(__firebase_config) 
-    : {
-        apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-        authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-        projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-        storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
-        messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-        appId: process.env.REACT_APP_FIREBASE_APP_ID
-    };
+// IMPORTANT: Replace these placeholder values with your own Firebase project's configuration!
+// To keep your app secure, make sure your GitHub repository is set to PRIVATE.
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY_HERE",
+    authDomain: "YOUR_AUTH_DOMAIN_HERE",
+    projectId: "YOUR_PROJECT_ID_HERE",
+    storageBucket: "YOUR_STORAGE_BUCKET_HERE",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID_HERE",
+    appId: "YOUR_APP_ID_HERE"
+};
 
 // --- App Initialization ---
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+// We only initialize the app if the config is valid
+let app;
+const isConfigValid = firebaseConfig && firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("YOUR_API_KEY");
+if (isConfigValid) {
+    app = initializeApp(firebaseConfig);
+}
+
+const auth = isConfigValid ? getAuth(app) : null;
+const db = isConfigValid ? getFirestore(app) : null;
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-fitness-app';
 
 // --- Helper Components ---
@@ -96,6 +101,10 @@ export default function App() {
 
     // --- Firebase Authentication and Data Loading ---
     useEffect(() => {
+        if (!isConfigValid || !auth) {
+            setLoading(false);
+            return;
+        }
         const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
             if (user) {
                 setUserId(user.uid);
@@ -115,7 +124,10 @@ export default function App() {
     }, []);
 
     useEffect(() => {
-        if (!userId) return;
+        if (!userId || !isConfigValid || !db) {
+            if(isConfigValid) setLoading(false);
+            return;
+        };
         
         setIsAuthReady(true);
         setLoading(true);
@@ -179,7 +191,7 @@ export default function App() {
 
     // --- CRUD Operations ---
     const handleSavePlan = async (planToSave) => {
-        if (!userId) return;
+        if (!userId || !db) return;
         const { id, ...planData } = planToSave;
         const planRef = id ? doc(db, `artifacts/${appId}/users/${userId}/plans`, id) : doc(collection(db, `artifacts/${appId}/users/${userId}/plans`));
         
@@ -198,12 +210,12 @@ export default function App() {
     };
 
     const handleDeletePlanConfirm = async (planId) => {
-        if (!userId) return;
+        if (!userId || !db) return;
         try { await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/plans`, planId)); } catch (error) { console.error("Error deleting plan: ", error); }
     };
 
     const handleSavePR = async (prToSave) => {
-        if (!userId) return;
+        if (!userId || !db) return;
         try {
             if (prToSave.id) {
                 const prRef = doc(db, `artifacts/${appId}/users/${userId}/prs`, prToSave.id);
@@ -215,7 +227,7 @@ export default function App() {
     };
     
     const handleDeletePR = async (prId) => {
-        if (!userId) return;
+        if (!userId || !db) return;
         try { await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/prs`, prId)); } catch (error) { console.error("Error deleting PR:", error); }
     };
 
@@ -243,6 +255,31 @@ export default function App() {
     };
 
     // --- Render Methods ---
+    
+    if (!isConfigValid) {
+      return (
+        <div className="bg-gray-900 text-white min-h-screen flex items-center justify-center p-4">
+          <div className="text-center p-8 bg-red-900/50 border border-red-700 rounded-lg max-w-2xl">
+            <div className="flex justify-center mb-4">
+                <AlertTriangle className="text-red-400" size={48} />
+            </div>
+            <h1 className="text-2xl font-bold text-red-300 mb-4">Firebase 配置错误</h1>
+            <p className="text-red-200">应用无法连接到数据库，因为缺少有效的Firebase配置。</p>
+            <p className="text-gray-400 mt-4">
+              要修复此问题，请将您从Firebase项目获得的配置信息，直接替换到代码文件顶部的 `firebaseConfig` 对象中的占位符。
+            </p>
+            <code className="block bg-gray-800 text-left p-4 rounded-md mt-4 text-sm text-yellow-300 overflow-x-auto">
+              const firebaseConfig = &#123; <br />
+              &nbsp;&nbsp;apiKey: "YOUR_API_KEY_HERE", <span className="text-gray-500">// &lt;-- 替换这里</span><br />
+              &nbsp;&nbsp;authDomain: "YOUR_AUTH_DOMAIN_HERE", <span className="text-gray-500">// &lt;-- 替换这里</span><br />
+              &nbsp;&nbsp;...<br />
+              &#125;;
+            </code>
+          </div>
+        </div>
+      );
+    }
+
     const renderView = () => {
         if (loading) {
             return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div></div>;
