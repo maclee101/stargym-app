@@ -11,12 +11,12 @@ import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, ad
 // IMPORTANT: Replace these placeholder values with your own Firebase project's configuration!
 // To keep your app secure, make sure your GitHub repository is set to PRIVATE.
 const firebaseConfig = {
-    apiKey: "AIzaSyDgY7PXsISXfYkFkiQWToYB7Ukgjobipmo",
-    authDomain: "stargym-app-maclee.firebaseapp.com",
-    projectId: "stargym-app-maclee",
-    storageBucket: "stargym-app-maclee.firebasestorage.app",
-    messagingSenderId: "727597086175",
-    appId: "1:727597086175:web:f6f08d47aae8ad2726406a"
+    apiKey: "YOUR_API_KEY_HERE",
+    authDomain: "YOUR_AUTH_DOMAIN_HERE",
+    projectId: "YOUR_PROJECT_ID_HERE",
+    storageBucket: "YOUR_STORAGE_BUCKET_HERE",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID_HERE",
+    appId: "YOUR_APP_ID_HERE"
 };
 
 // --- App Initialization ---
